@@ -1,0 +1,66 @@
+name: Deploy Web Stack
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  SCENARIO: public   # set to 'private' to deploy the private stack
+  STACK: MyWebStack
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+
+      - name: Optional - Build & push app image to ECR
+        if: ${{ secrets.ECR_REPO != '' }}
+        env:
+          ECR_REPO: ${{ secrets.ECR_REPO }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          pip install awscli
+          aws ecr get-login-password | docker login --username AWS --password-stdin $(echo $ECR_REPO | cut -d'/' -f1)
+          docker build -t $ECR_REPO:$IMAGE_TAG .
+          docker push $ECR_REPO:$IMAGE_TAG
+
+      - name: Deploy (public scenario)
+        if: ${{ env.SCENARIO == 'public' }}
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          python cli.py deploy --config config/web_stack.yaml
+
+      - name: Deploy (private scenario)
+        if: ${{ env.SCENARIO == 'private' }}
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          python cli.py deploy --config config/web_stack_private.yaml
+
+      - name: Outputs (status)
+        run: |
+          python cli.py status --stack ${{ env.STACK }}
