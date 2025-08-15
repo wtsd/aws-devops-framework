@@ -1,0 +1,12 @@
+services:
+  framework:
+    build: .
+    image: aws-devops-framework:latest
+    volumes:
+      - ./config:/app/config:rw
+      - ~/.aws:/root/.aws:ro
+    environment:
+      AWS_PROFILE: default
+      AWS_DEFAULT_REGION: us-east-1
+      DB_PASSWORD: changeme
+    command: ["deploy", "--config", "config/web_stack.yaml"]
