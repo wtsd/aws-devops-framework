@@ -1,0 +1,29 @@
+# Public scenario config
+scenario: public
+stack_name: MyWebStack
+region: us-east-1
+project_name: demo-web
+
+vpc_cidr: 10.80.0.0/16
+public_subnet_cidrs:
+  - 10.80.10.0/24
+  - 10.80.20.0/24
+
+container_image: public.ecr.aws/nginx/nginx:latest
+container_port: 80
+desired_count: 1
+
+# RDS
+db_engine_version: "15.6"
+db_instance_class: db.t4g.micro
+db_allocated_storage: 20
+db_name: appdb
+db_username: appuser
+# db_password: "set-me"   # Prefer env var: export DB_PASSWORD=...
+
+# HTTPS (optional): provide an existing ACM cert ARN in the SAME REGION
+# ssl_certificate_arn: "arn:aws:acm:REGION:ACCOUNT:certificate/..."
+
+tags:
+  Owner: Vlad
+  Project: DevOpsFramework
