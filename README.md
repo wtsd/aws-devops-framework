@@ -1,6 +1,6 @@
 # AWS DevOps Framework (Python + AWS SDK)
 
-A ready-to-go scaffold for DevOps engineers to deploy a typical web stack on AWS using **Python (boto3)** + **CloudFormation**.
+A ready-to-go template for DevOps engineers to deploy a typical web stack on AWS using **Python (boto3)** + **CloudFormation**.
 
 **Stacks included**
 - **Public scenario**: ALB + ECS Fargate (public subnets) + RDS (private SG; not publicly accessible)
